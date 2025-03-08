@@ -1,0 +1,43 @@
+RewriteEngine On
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "http://localhost:3000"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header set Access-Control-Allow-Credentials "true"
+    
+    # Handle preflight OPTIONS requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    
+    # Set headers for PDF files
+    <FilesMatch "\.(pdf)$">
+        Header set Access-Control-Allow-Origin "http://localhost:3000"
+        Header set Content-Type "application/pdf"
+        Header set Content-Disposition "inline"
+    </FilesMatch>
+</IfModule>
+
+# Handle OPTIONS method for CORS preflight requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Allow direct access to front-api directory
+RewriteCond %{REQUEST_URI} ^/front-api/.*
+RewriteRule ^ - [L]
+
+# Allow direct access to files in public directory
+RewriteCond %{REQUEST_URI} ^/public/.*
+RewriteRule ^ - [L]
+
+# Redirect all module requests through index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^modules/(.*)$ index.php [QSA,L]
+
+# Protect sensitive directories
+RewriteRule ^config/.* - [F,L]
+RewriteRule ^src/.* - [F,L]
+
+# Ensure PHP files are processed
+AddType application/x-httpd-php .php
