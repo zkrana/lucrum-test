@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { createReadStream, statSync } from 'fs';
 import { join } from 'path';
+import { Readable } from 'stream';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,25 +56,36 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'video/webm',
       };
 
-      return new NextResponse(stream as any, {
+      return new NextResponse(new ReadableStream({
+        start(controller) {
+          stream.on('data', (chunk) => controller.enqueue(chunk));
+          stream.on('end', () => controller.close());
+          stream.on('error', (err) => controller.error(err));
+        },
+      }), {
         status: 206,
         headers,
       });
     } else {
       // Handle non-range requests
-      // Determine content type based on file extension
       const contentType = videoPath.endsWith('.webm') ? 'video/webm' :
                          videoPath.endsWith('.mp4') ? 'video/mp4' :
                          videoPath.endsWith('.ogg') ? 'video/ogg' : 'video/mp4';
-    
+
       const headers = {
         'Content-Length': fileSize,
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes'
       };
-    
+
       const stream = createReadStream(videoPath);
-      return new NextResponse(stream as any, {
+      return new NextResponse(new ReadableStream({
+        start(controller) {
+          stream.on('data', (chunk) => controller.enqueue(chunk));
+          stream.on('end', () => controller.close());
+          stream.on('error', (err) => controller.error(err));
+        },
+      }), {
         status: 200,
         headers,
       });

@@ -40,7 +40,7 @@ interface FormattedVideo {
   }[];
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
