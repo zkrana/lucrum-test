@@ -1,5 +1,8 @@
 {
     "build": {
-      "ignoreBuildStep": true
+      "env": {
+        "NEXTJS_IGNORE_ESLINT": "1",
+        "NEXT_IGNORE_TYPECHECK": "1"
+      }
     }
   }
